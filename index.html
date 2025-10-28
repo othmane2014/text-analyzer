@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Text Analyzer</title>
+<style>
+  body {
+    background-color: #121212;
+    color: white;
+    font-family: Arial, sans-serif;
+    margin: 0; padding: 20px;
+    display: flex; justify-content: center;
+  }
+  .container {
+    max-width: 700px;
+    width: 100%;
+  }
+  h1 {
+    font-weight: 800;
+    font-size: 2.4rem;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  textarea {
+    width: 100%;
+    height: 140px;
+    background-color: #242424;
+    border: none;
+    border-radius: 6px;
+    resize: vertical;
+    padding: 10px;
+    font-size: 1rem;
+    color: white;
+  }
+  .options {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+  }
+  .analysis {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .box {
+    flex: 1;
+    margin: 0 5px;
+    background: #bb86fc; /* default purple */
+    padding: 20px;
+    border-radius: 12px;
+    color: black;
+    font-weight: 700;
+  }
+  .box:nth-child(2) {
+    background: #f9a825; /* orange */
+  }
+  .box:nth-child(3) {
+    background: #ff7043; /* coral */
+  }
+  .number {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+  }
+  .label {
+    font-weight: 400;
+  }
+  .footer {
+    margin-top: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Analyze your text in real-time.</h1>
+    <textarea id="textInput" placeholder="Start typing here... (or paste your text)"></textarea>
+    <div class="options">
+      <label>
+        <input type="checkbox" id="excludeSpaces" />
+        Exclude Spaces
+      </label>
+      <label>
+        <input type="checkbox" id="setCharLimit" />
+        Set Character Limit
+      </label>
+      <div id="readingTime">Approx. reading time: 0 minute</div>
+    </div>
+
+    <div class="analysis">
+      <div class="box" id="charCountBox">
+        <div class="number" id="charCount">00</div>
+        <div class="label">Total Characters</div>
+      </div>
+      <div class="box" id="wordCountBox">
+        <div class="number" id="wordCount">00</div>
+        <div class="label">Word Count</div>
+      </div>
+      <div class="box" id="sentenceCountBox">
+        <div class="number" id="sentenceCount">00</div>
+        <div class="label">Sentence Count</div>
+      </div>
+    </div>
+
+    <div class="footer" id="letterDensity">
+      Letter Density<br>
+      No characters found. Start typing to see letter density.
+    </div>
+  </div>
+
+<script>
+  const textInput = document.getElementById("textInput");
+  const excludeSpaces = document.getElementById("excludeSpaces");
+  const setCharLimit = document.getElementById("setCharLimit");
+
+  const charCountEl = document.getElementById("charCount");
+  const wordCountEl = document.getElementById("wordCount");
+  const sentenceCountEl = document.getElementById("sentenceCount");
+
+  const readingTimeEl = document.getElementById("readingTime");
+  const letterDensityEl = document.getElementById("letterDensity");
+
+  function updateCounts() {
+    let text = textInput.value;
+
+    if (setCharLimit.checked) {
+      const maxChars = 200;
+      if (text.length > maxChars) {
+        text = text.slice(0, maxChars);
+        textInput.value = text;
+      }
+    }
+
+    let charCount = text.length;
+    if (excludeSpaces.checked) charCount = text.replace(/\s/g, "").length;
+
+    // Word count (words separated by space)
+    const words = text.trim() ? text.trim().split(/\s+/) : [];
+    const wordCount = words.length;
+
+    // Sentence count (split by . ! ?)
+    const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [];
+    const sentenceCount = sentences.length;
+
+    // Reading time calculation (Average 200 words per minute)
+    const readTime = Math.ceil(wordCount / 200);
+
+    charCountEl.textContent = charCount < 10 ? "0" + charCount : charCount;
+    wordCountEl.textContent = wordCount < 10 ? "0" + wordCount : wordCount;
+    sentenceCountEl.textContent = sentenceCount < 10 ? "0" + sentenceCount : sentenceCount;
+    readingTimeEl.textContent = `Approx. reading time: ${readTime} minute${readTime !== 1 ? "s" : ""}`;
+
+    // Letter density (frequency of each letter)
+    if (charCount === 0) {
+      letterDensityEl.innerHTML = "Letter Density<br>No characters found. Start typing to see letter density.";
+      return;
+    }
+    const lettersOnly = text.toLowerCase().replace(/[^a-z]/g, "");
+    const freq = {};
+    for (const char of lettersOnly) {
+      freq[char] = (freq[char] || 0) + 1;
+    }
+    let densityHTML = "Letter Density<br>";
+    for (const [char, count] of Object.entries(freq)) {
+      densityHTML += `${char}: ${count} &nbsp;&nbsp;`;
+    }
+    letterDensityEl.innerHTML = densityHTML;
+  }
+
+  textInput.addEventListener("input", updateCounts);
+  excludeSpaces.addEventListener("change", updateCounts);
+  setCharLimit.addEventListener("change", updateCounts);
+</script>
+
+</body>
+</html>
